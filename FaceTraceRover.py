@@ -128,9 +128,9 @@ def SendMotorCommand(p,serial):
     return bytes_sent
 """
 顔を検出した座標を元に、モーターの制御値を設定
-ラズパイカメラから取得した画像を4x4のグリットに区切り、どのグリットで顔を認識したか（顔の座標を元に）
+ラズパイカメラから取得した画像を横4x縦3のグリットに区切り、どのグリットで顔を認識したか（顔の座標を元に）
 によって、左右のモーター値を設定する（値は実際動かしてみて程良かったもの）
-4x4は暫定的なもので、試作として最低限にしてある
+横4x縦3は暫定的なもので、試作として最低限にしてある
 """
 def MotorControl(p,_x,_y):
     
@@ -179,10 +179,7 @@ def loadFace(logger):
     faceImages = list()
     fileCount = 0
     baseImg = []
-    path = ('7') #複数のモデルを毎回検出した顔と比較すると時間がかかるため、自分のモデルのみを学習させる
-    # files = os.listdir(os.getcwd())
-    # dir = [f for f in files if os.path.isdir(os.path.join(os.getcwd(), f))]
-    #指定したフォルダ内には、自分の写真が100毎程度あるため、全部読み込んで学習させる
+    path = ('model_name') #model_nameに、認識させたい顔写真を100枚程度格納し、モデルのラベル名（任意）をフォルダ名として作成。
     for i, folder in enumerate(path):
         for fileName in os.listdir(folder):
             logger.debug(fileName)
@@ -205,7 +202,6 @@ def resizeAuthImg(src, baseImg):
 
     return dst
 #顔の検出サイズによって認識度(score)が違ったため（実際動かしてみた）、検出サイズと認識度の組み合わせで分岐させる
-#顔の検出サイズw<80のときだけとりあえずちかづく？もしくは、wに比例してscoreの値を決めていく？
 def PatternClose(w,score):
     if ((w > 280 or (w <= 120 and w >= 80)) and score <= 60):
         return True
@@ -288,8 +284,6 @@ def FaceTrace(logger, args):
                 
             detected_face = frame[y:y+h, x:x+w] #検出した顔の部分だけ取得（認識用）
             logger.debug(type(frame))
-                #ここで顔周辺を切り取ってリサイズしないと、サイズの関係で顔認識できない←解決？
-                #x,y,w,hを使って、顔周辺 を切り出す処理が必要（現状これしかわからん）
 
         #取得した顔情報を認識したい顔モデルと比較
         if len(detected_face) is not 2: #顔を検出していない場合、detected_face = 2
